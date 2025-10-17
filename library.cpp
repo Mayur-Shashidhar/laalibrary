@@ -523,35 +523,400 @@ int Matrix::isInvertible()
 }
 */
 
+// Global array to store matrices for menu operations
+Matrix* storedMatrices[10];
+int matrixCount = 0;
+
+// Function to clear input buffer
+void clearInputBuffer() {
+    cin.clear();
+    cin.ignore(10000, '\n');
+}
+
+// Function to get valid integer input
+int getValidInput(int min, int max) {
+    int choice;
+    while (true) {
+        cout << "Enter your choice (" << min << "-" << max << "): ";
+        if (cin >> choice && choice >= min && choice <= max) {
+            clearInputBuffer();
+            return choice;
+        }
+        cout << "Invalid input! Please enter a number between " << min << " and " << max << ".\n";
+        clearInputBuffer();
+    }
+}
+
+// Function to display all stored matrices
+void displayStoredMatrices() {
+    if (matrixCount == 0) {
+        cout << "\nNo matrices stored yet.\n";
+        return;
+    }
+    
+    cout << "\n=== Stored Matrices ===\n";
+    for (int i = 0; i < matrixCount; i++) {
+        cout << "\nMatrix " << (i + 1) << " (" << storedMatrices[i]->r << "x" << storedMatrices[i]->c << "):\n";
+        storedMatrices[i]->printMatrix();
+    }
+}
+
+// Function to select a matrix from stored matrices
+int selectMatrix() {
+    if (matrixCount == 0) {
+        cout << "No matrices available! Please create a matrix first.\n";
+        return -1;
+    }
+    
+    displayStoredMatrices();
+    cout << "\nSelect matrix (1-" << matrixCount << "): ";
+    int choice = getValidInput(1, matrixCount);
+    return choice - 1; // Convert to 0-based index
+}
+
+// Function to create a new matrix
+void createMatrix() {
+    if (matrixCount >= 10) {
+        cout << "Maximum number of matrices (10) reached!\n";
+        return;
+    }
+    
+    int rows, cols;
+    cout << "\nEnter number of rows: ";
+    cin >> rows;
+    cout << "Enter number of columns: ";
+    cin >> cols;
+    
+    if (rows <= 0 || cols <= 0 || rows > 100 || cols > 100) {
+        cout << "Invalid dimensions! Rows and columns must be between 1 and 100.\n";
+        return;
+    }
+    
+    storedMatrices[matrixCount] = new Matrix(rows, cols);
+    cout << "\nMatrix " << (matrixCount + 1) << " created successfully!\n";
+    cout << "Matrix contents:\n";
+    storedMatrices[matrixCount]->printMatrix();
+    matrixCount++;
+}
+
+// Function to display matrix properties menu
+void matrixPropertiesMenu(int index) {
+    Matrix* mat = storedMatrices[index];
+    
+    while (true) {
+        cout << "\n=== Matrix Properties Menu ===\n";
+        cout << "1. Check if Square\n";
+        cout << "2. Check if Identity\n";
+        cout << "3. Calculate Trace\n";
+        cout << "4. Get Dimensions\n";
+        cout << "5. Check if Idempotent\n";
+        cout << "6. Check if Involutory\n";
+        cout << "7. Calculate Determinant\n";
+        cout << "8. Back to main menu\n";
+        
+        int choice = getValidInput(1, 8);
+        
+        switch (choice) {
+            case 1:
+                cout << "Matrix is " << (mat->isSquare() ? "square" : "not square") << "\n";
+                break;
+            case 2:
+                cout << "Matrix is " << (mat->isIdentity() ? "an identity matrix" : "not an identity matrix") << "\n";
+                break;
+            case 3:
+                if (mat->isSquare()) {
+                    cout << "Trace: " << mat->trace() << "\n";
+                } else {
+                    cout << "Trace can only be calculated for square matrices!\n";
+                }
+                break;
+            case 4: {
+                int* dims = mat->dimensions();
+                cout << "Dimensions: " << dims[0] << " x " << dims[1] << "\n";
+                break;
+            }
+            case 5:
+                if (mat->isSquare()) {
+                    cout << "Matrix is " << (mat->isIdempotent() ? "idempotent" : "not idempotent") << "\n";
+                } else {
+                    cout << "Idempotent check only applies to square matrices!\n";
+                }
+                break;
+            case 6:
+                if (mat->isSquare()) {
+                    cout << "Matrix is " << (mat->isInvolutory() ? "involutory" : "not involutory") << "\n";
+                } else {
+                    cout << "Involutory check only applies to square matrices!\n";
+                }
+                break;
+            case 7:
+                if (mat->isSquare()) {
+                    double det = mat->determinant(mat->r, mat->m);
+                    cout << "Determinant: " << det << "\n";
+                } else {
+                    cout << "Determinant can only be calculated for square matrices!\n";
+                }
+                break;
+            case 8:
+                return;
+        }
+    }
+}
+
+// Function to perform matrix operations
+void matrixOperationsMenu() {
+    while (true) {
+        cout << "\n=== Matrix Operations Menu ===\n";
+        cout << "1. Matrix Addition (A + B)\n";
+        cout << "2. Matrix Subtraction (A - B)\n";
+        cout << "3. Matrix Multiplication (A * B)\n";
+        cout << "4. Scalar Multiplication\n";
+        cout << "5. Scalar Division\n";
+        cout << "6. Transpose\n";
+        cout << "7. Additive Inverse\n";
+        cout << "8. Gaussian Elimination\n";
+        cout << "9. Column Space\n";
+        cout << "10. LU Decomposition\n";
+        cout << "11. Symmetric/Skew-Symmetric Decomposition\n";
+        cout << "12. Back to main menu\n";
+        
+        int choice = getValidInput(1, 12);
+        
+        switch (choice) {
+            case 1: { // Addition
+                cout << "\nSelect first matrix:\n";
+                int idx1 = selectMatrix();
+                if (idx1 == -1) break;
+                
+                cout << "\nSelect second matrix:\n";
+                int idx2 = selectMatrix();
+                if (idx2 == -1) break;
+                
+                Matrix result = (*storedMatrices[idx1]) + (*storedMatrices[idx2]);
+                cout << "\nResult of addition:\n";
+                result.printMatrix();
+                break;
+            }
+            case 2: { // Subtraction
+                cout << "\nSelect first matrix:\n";
+                int idx1 = selectMatrix();
+                if (idx1 == -1) break;
+                
+                cout << "\nSelect second matrix:\n";
+                int idx2 = selectMatrix();
+                if (idx2 == -1) break;
+                
+                Matrix result = (*storedMatrices[idx1]) - (*storedMatrices[idx2]);
+                cout << "\nResult of subtraction:\n";
+                result.printMatrix();
+                break;
+            }
+            case 3: { // Multiplication (using existing method)
+                cout << "\nSelect matrix for multiplication:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                Matrix result = storedMatrices[idx]->multiplication();
+                cout << "\nResult of multiplication:\n";
+                result.printMatrix();
+                break;
+            }
+            case 4: { // Scalar multiplication
+                cout << "\nSelect matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                int scalar;
+                cout << "Enter scalar value: ";
+                cin >> scalar;
+                
+                Matrix result = (*storedMatrices[idx]) * scalar;
+                cout << "\nResult of scalar multiplication:\n";
+                result.printMatrix();
+                break;
+            }
+            case 5: { // Scalar division
+                cout << "\nSelect matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                int scalar;
+                cout << "Enter scalar value (non-zero): ";
+                cin >> scalar;
+                if (scalar == 0) {
+                    cout << "Cannot divide by zero!\n";
+                    break;
+                }
+                
+                Matrix result = (*storedMatrices[idx]) / scalar;
+                cout << "\nResult of scalar division:\n";
+                result.printMatrix();
+                break;
+            }
+            case 6: { // Transpose
+                cout << "\nSelect matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                Matrix result = storedMatrices[idx]->transpose();
+                cout << "\nTranspose:\n";
+                result.printMatrix();
+                break;
+            }
+            case 7: { // Additive inverse
+                cout << "\nSelect matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                Matrix result = storedMatrices[idx]->additiveInv();
+                cout << "\nAdditive Inverse:\n";
+                result.printMatrix();
+                break;
+            }
+            case 8: { // Gaussian elimination
+                cout << "\nSelect matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                cout << "\nPerforming Gaussian Elimination...\n";
+                storedMatrices[idx]->gaussElimination();
+                cout << "\nMatrix after Gaussian Elimination:\n";
+                storedMatrices[idx]->printMatrix();
+                break;
+            }
+            case 9: { // Column space
+                cout << "\nSelect matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                Matrix result = storedMatrices[idx]->columnSpace();
+                cout << "\nColumn Space:\n";
+                result.printMatrix();
+                break;
+            }
+            case 10: { // LU decomposition
+                cout << "\nSelect square matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                if (!storedMatrices[idx]->isSquare()) {
+                    cout << "LU decomposition requires a square matrix!\n";
+                    break;
+                }
+                
+                cout << "\nPerforming LU Decomposition...\n";
+                storedMatrices[idx]->LUdecomposition();
+                break;
+            }
+            case 11: { // Symmetric/Skew-symmetric decomposition
+                cout << "\nSelect square matrix:\n";
+                int idx = selectMatrix();
+                if (idx == -1) break;
+                
+                if (!storedMatrices[idx]->isSquare()) {
+                    cout << "Symmetric/Skew-symmetric decomposition requires a square matrix!\n";
+                    break;
+                }
+                
+                cout << "\nPerforming Symmetric/Skew-symmetric Decomposition...\n";
+                Matrix* result = storedMatrices[idx]->symmskew();
+                if (result != NULL) {
+                    cout << "\nSymmetric part:\n";
+                    result[0].printMatrix();
+                    cout << "\nSkew-symmetric part:\n";
+                    result[1].printMatrix();
+                }
+                break;
+            }
+            case 12:
+                return;
+        }
+    }
+}
+
+// Main menu function
+void displayMainMenu() {
+    cout << "\n===============================================\n";
+    cout << "         LINEAR ALGEBRA LIBRARY MENU          \n";
+    cout << "===============================================\n";
+    cout << "1. Create New Matrix\n";
+    cout << "2. Display All Matrices\n";
+    cout << "3. Matrix Properties\n";
+    cout << "4. Matrix Operations\n";
+    cout << "5. Delete Matrix\n";
+    cout << "6. Exit\n";
+    cout << "===============================================\n";
+}
 
 // driver code
 int main()
 {
-	Matrix m(4,4);
-	cout<<"\n";
-	m.printMatrix();
-	cout<<"\n";
-
-    Matrix resu = m.addition();
-    resu.printMatrix();
-    cout<<"\n";
-
-    resu = m.subtraction();
-    resu.printMatrix();
-    cout<<"\n";
-
-
-	Matrix out=m.transpose();
-	out.printMatrix();
-	cout<<"\n";
-
-    cout<<"gauss";
-	int *y=m.gaussElimination();
-	m.printMatrix();
-	cout<<"\n";
-
-	Matrix out1=m.columnSpace();
-	out1.printMatrix();
-
-	return 0;
+    cout << "Welcome to the Linear Algebra Library!\n";
+    cout << "This program allows you to create matrices and perform various operations.\n";
+    
+    while (true) {
+        displayMainMenu();
+        int choice = getValidInput(1, 6);
+        
+        switch (choice) {
+            case 1:
+                createMatrix();
+                break;
+                
+            case 2:
+                displayStoredMatrices();
+                break;
+                
+            case 3: {
+                if (matrixCount == 0) {
+                    cout << "No matrices available! Please create a matrix first.\n";
+                    break;
+                }
+                cout << "\nSelect matrix to view properties:\n";
+                int idx = selectMatrix();
+                if (idx != -1) {
+                    matrixPropertiesMenu(idx);
+                }
+                break;
+            }
+            
+            case 4:
+                if (matrixCount == 0) {
+                    cout << "No matrices available! Please create a matrix first.\n";
+                } else {
+                    matrixOperationsMenu();
+                }
+                break;
+                
+            case 5: {
+                if (matrixCount == 0) {
+                    cout << "No matrices to delete!\n";
+                    break;
+                }
+                cout << "\nSelect matrix to delete:\n";
+                int idx = selectMatrix();
+                if (idx != -1) {
+                    delete storedMatrices[idx];
+                    // Shift remaining matrices
+                    for (int i = idx; i < matrixCount - 1; i++) {
+                        storedMatrices[i] = storedMatrices[i + 1];
+                    }
+                    matrixCount--;
+                    cout << "Matrix deleted successfully!\n";
+                }
+                break;
+            }
+            
+            case 6:
+                cout << "\nCleaning up memory...\n";
+                // Clean up allocated memory
+                for (int i = 0; i < matrixCount; i++) {
+                    delete storedMatrices[i];
+                }
+                cout << "Thank you for using the Linear Algebra Library!\n";
+                return 0;
+        }
+    }
+    
+    return 0;
 }
